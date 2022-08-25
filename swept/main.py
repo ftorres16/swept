@@ -1,6 +1,7 @@
 import random
 
 from textual.app import App
+from textual.reactive import Reactive
 from textual.views import GridView
 
 from swept.cell import Cell, LeftClick, MiddleClick, RightClick
@@ -61,8 +62,27 @@ class Swept(GridView):
     CLEAR_CELL = "rgb(112,128,144) on rgb(112,128,144)"
     PRESSED_CELL = "white on rgb(16,16,16)"
     BOMB_CELL = "white on red"
+    WON_CELL = "white on green"
 
-    game_over = False
+    game_over = Reactive(False)
+    game_won = Reactive(False)
+
+    cell_btns = []
+
+    def watch_game_over(self, game_over: bool) -> None:
+        """Change background to red when game is over."""
+        if game_over:
+            self.uncover_bombs()
+            self.log("Game over!")
+
+    def watch_game_won(self, game_won: bool) -> None:
+        """Change background to green when game is won."""
+        if game_won:
+            self.log("Game won!")
+            for btn in self.cell_btns:
+                if btn.label == FLAG_CHAR:
+                    btn.button_style = self.WON_CELL
+                    btn.label = btn.label + " "
 
     def on_mount(self) -> None:
         """
@@ -122,9 +142,8 @@ class Swept(GridView):
             return
 
         if cell_txt == BOMB_CHAR:
-            self.game_over = True
             self.cell_btns[cell_idx].button_style = self.BOMB_CELL
-            self.uncover_bombs()
+            self.game_over = True
         else:
             self.cell_btns[cell_idx].button_style = self.PRESSED_CELL
 
@@ -136,6 +155,8 @@ class Swept(GridView):
                 self.uncover_cell(adj_idx)
 
         self.cell_btns[cell_idx].label = cell_txt
+
+        self.game_won = self.win_condition()
 
     def uncover_bombs(self) -> None:
         """Uncover all bombs."""
@@ -169,10 +190,18 @@ class Swept(GridView):
             return
 
         cell.label = FLAG_CHAR if cell.label == "" else ""
+        self.game_won = self.win_condition()
+
+    def win_condition(self) -> bool:
+        """Compute if the game has been won."""
+        return all(btn.label not in ["", BOMB_CHAR] for btn in self.cell_btns)
 
 
 class SweptApp(App):
     """The game application."""
+
+    async def on_load(self, event):
+        await self.bind("q", "quit")
 
     async def on_mount(self) -> None:
         await self.view.dock(Swept())
