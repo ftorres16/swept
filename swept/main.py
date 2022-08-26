@@ -160,7 +160,7 @@ class Swept(GridView):
                 btn.status = CellStatus.UNCOVERED
 
     def uncover_adjacent(self, cell_idx: int) -> None:
-        """Uncover adjacent cells if all bombs have been identified."""
+        """Uncover adjacent cells if all bombs around a specific cell have been identified."""
         try:
             expected_bombs = int(self.cell_btns[cell_idx].label)
         except ValueError:
