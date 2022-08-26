@@ -2,7 +2,7 @@
 name = "swept"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Fabian Torres"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
