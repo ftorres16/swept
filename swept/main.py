@@ -6,18 +6,15 @@ from textual.reactive import Reactive
 from textual.views import GridView
 
 from swept.cell import BOMB_CHAR, Cell, CellStatus, LeftClick, MiddleClick, RightClick
+from swept.enums import GameStatus
 from swept.exceptions import CantToggleFlag, CantUncover
+from swept.help_panel import HelpPanel
+from swept.top_panel import TopPanel, TopPanelPressed
 
 
 N_COLS = 10
 N_ROWS = 10
 BOMB_PERCENT = 20
-
-
-class GameStatus(enum.Enum):
-    IN_PROGRESS = enum.auto()
-    WON = enum.auto()
-    LOST = enum.auto()
 
 
 def adjacent_idxs(idx: int) -> list[int]:
@@ -59,7 +56,7 @@ def count_bombs(cells: list[str], idx: int) -> str:
     return str(bombs)
 
 
-class Swept(GridView):
+class CellGrid(GridView):
     """
     Minesweeper-like game.
     """
@@ -204,9 +201,16 @@ class SweptApp(App):
         await self.bind("r", "reset", "Reset")
 
     async def on_mount(self) -> None:
-        self.cell_grid = Swept()
+        self.title_bar = TopPanel()
+        self.cell_grid = CellGrid()
+        self.help_panel = HelpPanel()
 
-        await self.view.dock(self.cell_grid)
+        await self.view.dock(self.title_bar, size=3, edge="top")
+        await self.view.dock(self.help_panel, size=40, edge="right")
+        await self.view.dock(self.cell_grid, edge="top")
+
+    def handle_top_panel_pressed(self, message: TopPanelPressed) -> None:
+        self.cell_grid.reset_game()
 
     async def action_reset(self) -> None:
         self.cell_grid.reset_game()
