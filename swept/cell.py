@@ -45,6 +45,7 @@ class Cell(Button):
     def watch_status(self, status: CellStatus) -> None:
         """Control cell label based on its status."""
         if status == CellStatus.COVERED:
+            self.button_style = self.COVERED_CELL
             self.label = ""
         elif status == CellStatus.FLAGGED:
             self.label = FLAG_CHAR

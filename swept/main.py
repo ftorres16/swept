@@ -83,20 +83,11 @@ class Swept(GridView):
         """
         Event when widget is first mounted.
         """
-        cells_txt = [BOMB_CHAR] * (N_COLS * N_ROWS * BOMB_PERCENT // 100) + [""] * (
-            N_COLS * N_ROWS - N_COLS * N_ROWS * BOMB_PERCENT // 100
-        )
-        random.shuffle(cells_txt)
-        for idx, _ in enumerate(cells_txt):
-            cells_txt[idx] = count_bombs(cells_txt, idx)
-
         self.cell_btns = [
             Cell("", style=Cell.COVERED_CELL, name=f"{idx}")
             for idx in range(N_COLS * N_ROWS)
         ]
-
-        for cell, txt in zip(self.cell_btns, cells_txt):
-            cell.value = txt
+        self.reset_game()
 
         # set basic grid settings
         self.grid.set_gap(1, 1)
@@ -108,6 +99,21 @@ class Swept(GridView):
         self.grid.add_row("row", max_size=3, repeat=N_ROWS)
 
         self.grid.place(*self.cell_btns)
+
+    def reset_game(self) -> None:
+        """Reset game."""
+        cells_txt = [BOMB_CHAR] * (N_COLS * N_ROWS * BOMB_PERCENT // 100) + [""] * (
+            N_COLS * N_ROWS - N_COLS * N_ROWS * BOMB_PERCENT // 100
+        )
+        random.shuffle(cells_txt)
+        for idx, _ in enumerate(cells_txt):
+            cells_txt[idx] = count_bombs(cells_txt, idx)
+
+        for cell, txt in zip(self.cell_btns, cells_txt):
+            cell.value = txt
+            cell.status = CellStatus.COVERED
+
+        self.game_status = GameStatus.IN_PROGRESS
 
     def handle_left_click(self, message: LeftClick) -> None:
         """Left click on a cell in the grid."""
@@ -195,9 +201,15 @@ class SweptApp(App):
 
     async def on_load(self, event):
         await self.bind("q", "quit")
+        await self.bind("r", "reset")
 
     async def on_mount(self) -> None:
-        await self.view.dock(Swept())
+        self.cell_grid = Swept()
+
+        await self.view.dock(self.cell_grid)
+
+    async def action_reset(self) -> None:
+        self.cell_grid.reset_game()
 
 
 if __name__ == "__main__":
