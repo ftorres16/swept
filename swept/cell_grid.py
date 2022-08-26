@@ -9,45 +9,6 @@ from swept.enums import GameStatus
 from swept.exceptions import CantToggleFlag, CantUncover
 
 
-def adjacent_idxs(idx: int) -> list[int]:
-    """Compute all adjacent valid indices of a cell."""
-    adjacents = []
-
-    col = idx % N_COLS
-    row = idx // N_COLS
-
-    if col != 0 and row != 0:
-        adjacents.append(idx - N_COLS - 1)
-    if col != 0:
-        adjacents.append(idx - 1)
-    if col != 0 and row != N_ROWS - 1:
-        adjacents.append(idx + N_COLS - 1)
-    if row != 0:
-        adjacents.append(idx - N_COLS)
-    if row != N_ROWS - 1:
-        adjacents.append(idx + N_COLS)
-    if col != N_COLS - 1 and row != 0:
-        adjacents.append(idx - N_COLS + 1)
-    if col != N_COLS - 1:
-        adjacents.append(idx + 1)
-    if col != N_COLS - 1 and row != N_ROWS - 1:
-        adjacents.append(idx + N_COLS + 1)
-
-    return adjacents
-
-
-def count_bombs(cells: list[str], idx: int) -> str:
-    """
-    Compute the number of adjacent bombs to a cell.
-    """
-    if cells[idx] == BOMB_CHAR:
-        return BOMB_CHAR
-
-    bombs = sum(1 for adj_idx in adjacent_idxs(idx) if cells[adj_idx] == BOMB_CHAR)
-
-    return str(bombs)
-
-
 class CellGrid(GridView):
     """
     Minesweeper-like game.
@@ -92,7 +53,7 @@ class CellGrid(GridView):
         )
         random.shuffle(cells_txt)
         for idx, _ in enumerate(cells_txt):
-            cells_txt[idx] = count_bombs(cells_txt, idx)
+            cells_txt[idx] = self.count_adjacent_bombs(cells_txt, idx)
 
         for cell, txt in zip(self.cell_btns, cells_txt):
             cell.value = txt
@@ -109,7 +70,7 @@ class CellGrid(GridView):
 
         # propagate 0 cell uncovering
         if cell.value == "0":
-            for adj_idx in adjacent_idxs(cell_idx):
+            for adj_idx in self._adjacent_idxs(cell_idx):
                 self.uncover_cell(adj_idx)
 
     def uncover_bombs(self) -> None:
@@ -127,12 +88,12 @@ class CellGrid(GridView):
 
         seen_bombs = sum(
             1
-            for adj_idx in adjacent_idxs(cell_idx)
+            for adj_idx in self._adjacent_idxs(cell_idx)
             if self.cell_btns[adj_idx].status == CellStatus.FLAGGED
         )
 
         if expected_bombs == seen_bombs:
-            for adj_idx in adjacent_idxs(cell_idx):
+            for adj_idx in self._adjacent_idxs(cell_idx):
                 self.uncover_cell(adj_idx)
 
     def flag_cell(self, cell_idx: int) -> None:
@@ -154,3 +115,42 @@ class CellGrid(GridView):
     def lose_condition(self) -> bool:
         """Compute if the game has been lost."""
         return any(cell.status == CellStatus.EXPLODED for cell in self.cell_btns)
+
+    def _adjacent_idxs(self, idx: int) -> list[int]:
+        """Compute all adjacent valid indices of a cell."""
+        adjacents = []
+
+        col = idx % N_COLS
+        row = idx // N_COLS
+
+        if col != 0 and row != 0:
+            adjacents.append(idx - N_COLS - 1)
+        if col != 0:
+            adjacents.append(idx - 1)
+        if col != 0 and row != N_ROWS - 1:
+            adjacents.append(idx + N_COLS - 1)
+        if row != 0:
+            adjacents.append(idx - N_COLS)
+        if row != N_ROWS - 1:
+            adjacents.append(idx + N_COLS)
+        if col != N_COLS - 1 and row != 0:
+            adjacents.append(idx - N_COLS + 1)
+        if col != N_COLS - 1:
+            adjacents.append(idx + 1)
+        if col != N_COLS - 1 and row != N_ROWS - 1:
+            adjacents.append(idx + N_COLS + 1)
+
+        return adjacents
+
+    def count_adjacent_bombs(self, cells: list[str], idx: int) -> str:
+        """
+        Compute the number of adjacent bombs to a cell.
+        """
+        if cells[idx] == BOMB_CHAR:
+            return BOMB_CHAR
+
+        bombs = sum(
+            1 for adj_idx in self._adjacent_idxs(idx) if cells[adj_idx] == BOMB_CHAR
+        )
+
+        return str(bombs)
