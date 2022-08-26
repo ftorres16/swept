@@ -200,8 +200,8 @@ class SweptApp(App):
     """The game application."""
 
     async def on_load(self, event):
-        await self.bind("q", "quit")
-        await self.bind("r", "reset")
+        await self.bind("q", "quit", "Quit")
+        await self.bind("r", "reset", "Reset")
 
     async def on_mount(self) -> None:
         self.cell_grid = Swept()
