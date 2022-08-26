@@ -1,6 +1,6 @@
 # Swept
 
-![new game](./imgs/new_game.png)
+![demo_screencast](./imgs/demo_screencast.gif)
 
 A [minesweeper](https://en.wikipedia.org/wiki/Minesweeper\_\(video_game\)) clone for the terminal. built with [Textual](https://github.com/Textualize/textual).
 
@@ -23,7 +23,10 @@ The main purpose of this project was to learn Textual and TUIs.
 
 ## Screenshots
 
-### Game Lost
+### New game
+![new game](./imgs/new_game.png)
+
+### Game lost
 ![game_lost](./imgs/game_lost.png)
 
 ### Game won
