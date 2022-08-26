@@ -3,7 +3,7 @@ import random
 from textual.reactive import Reactive
 from textual.views import GridView
 
-from swept.cell import BOMB_CHAR, Cell, CellStatus, LeftClick, MiddleClick, RightClick
+from swept.cell import BOMB_CHAR, Cell, CellStatus
 from swept.config import BOMB_PERCENT, N_COLS, N_ROWS
 from swept.enums import GameStatus
 from swept.exceptions import CantToggleFlag, CantUncover
@@ -56,17 +56,13 @@ class CellGrid(GridView):
     game_status = Reactive(GameStatus.IN_PROGRESS)
 
     def watch_game_status(self, game_status: GameStatus) -> None:
-        """Control game based on status."""
+        """Control grid based on status."""
         if game_status == GameStatus.LOST:
             self.uncover_bombs()
-            self.log("Game over!")
         elif game_status == GameStatus.WON:
-            self.log("Game won!")
             for btn in self.cell_btns:
                 if btn.status == CellStatus.FLAGGED:
                     btn.status = CellStatus.FLAGGED_WON
-                    # btn.button_style = btn.WON_CELL
-                    # btn.label = btn.label + " "
 
     def on_mount(self) -> None:
         """
@@ -102,26 +98,6 @@ class CellGrid(GridView):
             cell.value = txt
             cell.status = CellStatus.COVERED
 
-        self.game_status = GameStatus.IN_PROGRESS
-
-    def handle_left_click(self, message: LeftClick) -> None:
-        """Left click on a cell in the grid."""
-        if self.game_status != GameStatus.IN_PROGRESS:
-            return
-        self.uncover_cell(int(message.sender.name))
-
-    def handle_middle_click(self, message: MiddleClick) -> None:
-        """Middle click on a cell in the grid."""
-        if self.game_status != GameStatus.IN_PROGRESS:
-            return
-        self.uncover_adjacent(int(message.sender.name))
-
-    def handle_right_click(self, message: RightClick) -> None:
-        """Right click on a cell in the grid."""
-        if self.game_status != GameStatus.IN_PROGRESS:
-            return
-        self.flag_cell(int(message.sender.name))
-
     def uncover_cell(self, cell_idx: int) -> None:
         """Flip a cell."""
         cell = self.cell_btns[cell_idx]
@@ -130,12 +106,6 @@ class CellGrid(GridView):
             cell.uncover()
         except CantUncover:
             return
-
-        if cell.status == CellStatus.EXPLODED:
-            self.game_status = GameStatus.LOST
-
-        if self.win_condition():
-            self.game_status = GameStatus.WON
 
         # propagate 0 cell uncovering
         if cell.value == "0":
@@ -174,12 +144,13 @@ class CellGrid(GridView):
         except CantToggleFlag:
             return
 
-        if self.win_condition():
-            self.game_status = GameStatus.WON
-
     def win_condition(self) -> bool:
         """Compute if the game has been won."""
         return all(
             cell.status in [CellStatus.UNCOVERED, CellStatus.FLAGGED]
             for cell in self.cell_btns
         )
+
+    def lose_condition(self) -> bool:
+        """Compute if the game has been lost."""
+        return any(cell.status == CellStatus.EXPLODED for cell in self.cell_btns)
