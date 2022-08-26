@@ -19,6 +19,9 @@ class SweptApp(App):
 
         await self.view.dock(self.title_bar, size=3, edge="top")
         await self.view.dock(self.help_panel, size=40, edge="right")
+        await self.view.dock(
+            self.help_panel, size=40, edge="left"
+        )  # workaround to center grid
         await self.view.dock(self.cell_grid, edge="top")
 
     def handle_top_panel_pressed(self, message: TopPanelPressed) -> None:
