@@ -48,16 +48,18 @@ class CellGrid(GridView):
 
     def reset_game(self) -> None:
         """Reset game."""
-        cells_txt = [BOMB_CHAR] * (N_COLS * N_ROWS * BOMB_PERCENT // 100) + [""] * (
-            N_COLS * N_ROWS - N_COLS * N_ROWS * BOMB_PERCENT // 100
-        )
-        random.shuffle(cells_txt)
-        for idx, _ in enumerate(cells_txt):
-            cells_txt[idx] = self.count_adjacent_bombs(cells_txt, idx)
+        n_bombs = len(self.cell_btns) * BOMB_PERCENT // 100
+        bombs = [True] * n_bombs + [False] * (len(self.cell_btns) - n_bombs)
+        random.shuffle(bombs)
 
-        for cell, txt in zip(self.cell_btns, cells_txt):
-            cell.value = txt
-            cell.status = CellStatus.COVERED
+        for btn, bomb in zip(self.cell_btns, bombs):
+            btn.value = BOMB_CHAR if bomb else ""
+
+        for idx, btn in enumerate(self.cell_btns):
+            if btn.value != BOMB_CHAR:
+                btn.value = str(self.count_adjacent_bombs(idx))
+            self.log(btn.value)
+            btn.status = CellStatus.COVERED
 
     def uncover_cell(self, cell_idx: int) -> None:
         """Flip a cell."""
@@ -142,15 +144,12 @@ class CellGrid(GridView):
 
         return adjacents
 
-    def count_adjacent_bombs(self, cells: list[str], idx: int) -> str:
+    def count_adjacent_bombs(self, idx: int) -> int:
         """
         Compute the number of adjacent bombs to a cell.
         """
-        if cells[idx] == BOMB_CHAR:
-            return BOMB_CHAR
-
-        bombs = sum(
-            1 for adj_idx in self._adjacent_idxs(idx) if cells[adj_idx] == BOMB_CHAR
+        return sum(
+            1
+            for adj_idx in self._adjacent_idxs(idx)
+            if self.cell_btns[adj_idx].value == BOMB_CHAR
         )
-
-        return str(bombs)
