@@ -10,7 +10,7 @@ textual = "^0.1.18"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-black = "^22.6.0"
+black = "^24.3.0"
 ipython = "^8.4.0"
 ipdb = "^0.13.9"
 flake8 = "^5.0.4"
